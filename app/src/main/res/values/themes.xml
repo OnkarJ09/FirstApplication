@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- No action bar: Compose draws the entire UI. -->
+    <style name="Theme.AndroidTest" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
