@@ -99,12 +99,48 @@ Other useful commands:
 ```bash
 ./gradlew testDebugUnitTest          # JVM unit tests
 ./gradlew lintDebug                  # Android lint
+./gradlew assembleRelease            # signed release APK (see below)
 ```
 
-## 4. Expected APK location
+### Release build and signing
+
+`assembleRelease` produces `app/build/outputs/apk/release/app-release.apk`.
+Signing credentials are **never committed**. They are read from the git-ignored
+`local.properties`, or from environment variables with the same names:
+
+```properties
+# local.properties
+release.keystore=/absolute/path/to/release.jks
+release.keystore.password=<store password>
+release.key.alias=<key alias>
+release.key.password=<key password>
+```
+
+If `release.keystore` is not configured, `assembleRelease` still succeeds but
+emits an unsigned APK that cannot be installed. To create a keystore:
+
+```bash
+keytool -genkeypair -keystore ~/.android/keystores/release.jks \
+  -alias my-release -keyalg RSA -keysize 4096 -validity 10000 \
+  -storetype PKCS12 -storepass '<password>' -keypass '<password>' \
+  -dname "CN=My App, O=My Org, C=IN"
+```
+
+Verify a built release APK:
+
+```bash
+apksigner verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+zipalign -c -v 4 app/build/outputs/apk/release/app-release.apk
+```
+
+> Keep the keystore file and its password backed up outside this repository. If
+you lose them you cannot ship updates for the same application ID.
+
+## 4. Expected APK locations
 
 ```text
-app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/debug/app-debug.apk        # debug-signed
+app/build/outputs/apk/release/app-release.apk    # release-signed (see above)
 ```
 
 ## 5. Install on a connected device or emulator
