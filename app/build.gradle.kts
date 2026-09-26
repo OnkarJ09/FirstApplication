@@ -57,6 +57,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    // Compose ui-test depends on espresso-core 3.5.0 transitively, whose idling
+    // integration uses hidden APIs removed from recent platform versions. Pin a
+    // current Espresso so androidx.compose.ui.test's Espresso.onIdle() works.
+    androidTestImplementation(libs.androidx.test.espresso.core)
 
     // Local JVM unit tests
     testImplementation(libs.junit)
