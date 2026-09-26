@@ -48,6 +48,16 @@ status text is derived from the counter by a small pure function
 | targetSdk / compileSdk | 37 |
 | Permissions | none (no dangerous permissions requested) |
 
+### App sample
+
+<p align="center">
+  <img src="TestProjApplication.png" width="40%" alt="Android Environment Test app running on a Pixel 10a emulator">
+</p>
+
+The screenshot was captured on the Pixel 10a emulator (Android 17 / API 37) in
+the initial state: `Counter: 0` and `Status: Ready`. Once **TEST BUTTON** is
+tapped, the same screen shows `Counter: 1` and `Status: Test button works!`.
+
 ---
 
 ## 2. Required tools
