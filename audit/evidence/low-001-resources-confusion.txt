@@ -1,0 +1,5 @@
+=== Evidence LOW-001: Resources Confusion ===
+ |-> manipulator : Resources Confusion
+[*] app-release.apk!classes.dex
+ |-> compiler : r8
+[*] app-release.apk!classes2.dex

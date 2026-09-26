@@ -1,0 +1,7 @@
+=== Evidence LOW-002: Missing network_security_config ===
+No network_security_config.xml found:
+Manifest has no networkSecurityConfig attribute:
+Not found
+
+No INTERNET permission declared:
+Not found

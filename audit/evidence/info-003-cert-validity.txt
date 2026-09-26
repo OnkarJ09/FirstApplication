@@ -1,0 +1,8 @@
+=== Evidence INFO-003: Certificate validity ===
+Valid from: Sat Sep 26 10:33:56 IST 2026 until: Wed Feb 11 10:33:56 IST 2054
+
+apksigner cert details:
+Signer #1 certificate DN: CN=Android Environment Test, OU=TestProj, O=OnkarJ09, L=Unknown, ST=Unknown, C=IN
+Signer #1 certificate SHA-256 digest: 23f8444e183c40fcc8a5da4f2292d024a3292f896fd9e81e172cb5290d8d17c1
+Signer #1 certificate SHA-1 digest: f4a118c352e0d94208a4047af02bfde51ccd26fb
+Signer #1 certificate MD5 digest: c13508ff7ccbcf9bd790caa4e7ab4870

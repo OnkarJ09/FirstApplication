@@ -1,0 +1,51 @@
+{
+  "coverage": {
+    "static_analysis": "complete",
+    "dynamic_analysis": "partial",
+    "framework": "native",
+    "obfuscation": "r8",
+    "native_code": "not-applicable",
+    "rasp": "not-detected"
+  },
+  "total_findings": {
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 2,
+    "informational": 3
+  },
+  "masvs_v2_controls": {
+    "MASVS-STORAGE-1": "FAIL",
+    "MASVS-STORAGE-2": "PASS",
+    "MASVS-CRYPTO-1": "PASS",
+    "MASVS-NETWORK-1": "PASS",
+    "MASVS-PLATFORM-1": "PASS",
+    "MASVS-PLATFORM-2": "PASS",
+    "MASVS-RESILIENCE-1": "PASS",
+    "MASVS-RESILIENCE-2": "PASS",
+    "MASVS-PRIVACY-1": "PASS",
+    "MASVS-AUTH-1": "N/A"
+  },
+  "limitations": [
+    "Dynamic analysis limited: Device not rooted; Frida server cannot run. Runtime behaviors (SSL pinning, root detection, native code) not tested.",
+    "No network traffic: App declares no INTERNET permission; network security not dynamically validated.",
+    "Library code not fully audited: Only app namespace (com.onkar.androidtest.*) analyzed per scope rules. Framework/library findings (e.g., DisplayCompat anti-VM) noted but not deeply traced.",
+    "ADB backup not fully tested: Backup prompt requires user confirmation on device; automated extraction not possible without user interaction."
+  ],
+  "toolchain": {
+    "apktool": "2.10.0",
+    "jadx": "1.5.1",
+    "apkid": "3.1.0",
+    "apksigner": "0.9 (Build Tools 36.0.0)",
+    "aapt2": "Build Tools 36.0.0",
+    "frida": "17.19.0 (not usable - device unrooted)",
+    "objection": "1.12.5 (not usable - requires Frida)"
+  },
+  "scope": {
+    "package": "com.onkar.androidtest",
+    "version": "1.0",
+    "version_code": 1,
+    "namespace_analyzed": "com.onkar.androidtest.*",
+    "framework": "Native Android (Kotlin + Jetpack Compose)"
+  }
+}

@@ -1,0 +1,6 @@
+=== Evidence INFO-001: Anti-VM in library code ===
+ |-> anti_vm : Build.MANUFACTURER check
+ |-> compiler : r8 without marker (suspicious)
+
+Source in library (DisplayCompat.java):
+85:        return isTv(context) && "Sony".equals(Build.MANUFACTURER) && Build.MODEL.startsWith("BRAVIA") && context.getPackageManager().hasSystemFeature("com.sony.dtv.hardware.panel.qfhd");

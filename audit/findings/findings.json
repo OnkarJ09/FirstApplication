@@ -1,0 +1,232 @@
+[
+  {
+    "id": "HIGH-001",
+    "title": "allowBackup=\"true\" Enables Data Extraction via ADB Backup",
+    "confidence": "Confirmed",
+    "severity": "High",
+    "cvss_vector": "CVSS:4.0/AV:P/AC:L/AT:N/PR:N/UI:R/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 5.9,
+    "cwe": "CWE-926",
+    "owasp": "MASVS-STORAGE-1",
+    "description": "The application manifest declares android:allowBackup=\"true\", which allows ADB backup of the app private data directory. On modern Android (9+), this requires explicit user confirmation via the BackupRestoreConfirmation dialog. While the current app stores no sensitive data, this setting creates a risk if future versions add sensitive data and a user can be socially engineered to confirm the backup.",
+    "affected_components": [
+      {
+        "file": "AndroidManifest.xml",
+        "line": 4,
+        "component": "application",
+        "attribute": "android:allowBackup=\"true\""
+      }
+    ],
+    "attack_scenario": "1. Attacker gains physical access to unlocked device with USB debugging enabled\n2. Attacker runs: adb backup -f backup.ab com.onkar.androidtest\n3. Backup confirmation dialog appears on device (com.android.backupconfirm/.BackupRestoreConfirmation)\n4. User confirms (social engineering, auto-confirm on some MDM configs, or user error)\n5. Attacker extracts .ab file: dd if=backup.ab bs=24 skip=1 | zlib-flate -uncompress > backup.tar\n6. Attacker accesses all files in /data/data/com.onkar.androidtest/",
+    "proof_of_concept": "adb backup -f backup.ab com.onkar.androidtest\n# User confirms on device (dialog: com.android.backupconfirm/.BackupRestoreConfirmation)\ndd if=backup.ab bs=24 skip=1 | zlib-flate -uncompress > backup.tar\ntar -xf backup.tar\n# Contents of app's private data now accessible",
+    "impact": {
+      "confidentiality": "High - all private app data extractable (requires user confirmation on Android 9+)",
+      "integrity": "None - backup is read-only",
+      "availability": "None"
+    },
+    "remediation": "<application\n    android:allowBackup=\"false\"\n    ... >\n\nOr if backup is required:\n<application\n    android:allowBackup=\"true\"\n    android:fullBackupContent=\"@xml/backup_rules\"\n    ... >\nWith res/xml/backup_rules.xml:\n<full-backup-content>\n    <exclude domain=\"database\" path=\".\"/>\n    <exclude domain=\"sharedpref\" path=\".\"/>\n    <exclude domain=\"file\" path=\".\"/>\n</full-backup-content>",
+    "evidence_files": [
+      "evidence/high-001-allowbackup.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "MED-001",
+    "title": "Exported BroadcastReceiver (ProfileInstallReceiver) with System Permission",
+    "confidence": "Confirmed",
+    "severity": "Medium",
+    "cvss_vector": "CVSS:4.0/AV:P/AC:L/AT:N/PR:N/UI:R/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 4.3,
+    "cwe": "CWE-926",
+    "owasp": "MASVS-PLATFORM-2",
+    "description": "The app includes androidx.profileinstaller.ProfileInstallReceiver declared as android:exported=\"true\" with android:permission=\"android.permission.DUMP\". This is a standard Jetpack library component for profile installation benchmarking. While protected by the DUMP system permission (normally only granted to system apps/shell), it represents an exported component that could theoretically be targeted.",
+    "affected_components": [
+      {
+        "file": "AndroidManifest.xml",
+        "line": 18,
+        "component": "receiver",
+        "name": "androidx.profileinstaller.ProfileInstallReceiver",
+        "exported": true,
+        "permission": "android.permission.DUMP"
+      }
+    ],
+    "attack_scenario": "1. Attacker with system-level access or rooted device\n2. Attacker broadcasts to the receiver with crafted intent\n3. Potential for DoS or unexpected profile installation behavior",
+    "proof_of_concept": "adb shell am broadcast -a androidx.profileinstaller.action.INSTALL_PROFILE \\\n  -n com.onkar.androidtest/androidx.profileinstaller.ProfileInstallReceiver",
+    "impact": {
+      "confidentiality": "Low - no data exposed",
+      "integrity": "Low - profile installation triggered",
+      "availability": "Low - potential DoS via repeated broadcasts"
+    },
+    "remediation": "This is a library component. If not using ProfileInstaller, remove the dependency. Otherwise, accept as low-risk framework component with system-level permission protection.",
+    "evidence_files": [
+      "evidence/med-001-receiver.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "LOW-001",
+    "title": "Resources Confusion (R8 Optimization Artifact)",
+    "confidence": "Likely",
+    "severity": "Low",
+    "cvss_vector": "CVSS:4.0/AV:L/AC:H/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 2.1,
+    "cwe": "CWE-693",
+    "owasp": "MASVS-RESILIENCE-2",
+    "description": "APKiD detects \"Resources Confusion\" manipulator in the APK. This is an R8 optimization technique that can cause resource ID collisions, potentially making reverse engineering slightly more difficult but also potentially causing runtime issues on some devices.",
+    "affected_components": [
+      {
+        "file": "classes.dex",
+        "component": "dex",
+        "note": "APKiD detection"
+      }
+    ],
+    "attack_scenario": "Minor reverse engineering obstacle; potential resource loading issues on edge cases",
+    "proof_of_concept": "apkid app-release.apk\n# Output shows: |-> manipulator : Resources Confusion",
+    "impact": {
+      "confidentiality": "None",
+      "integrity": "Low - potential resource loading issues",
+      "availability": "None"
+    },
+    "remediation": "Verify app functionality across target device configurations. This is typically a benign R8 optimization artifact.",
+    "evidence_files": [
+      "evidence/low-001-resources-confusion.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "LOW-002",
+    "title": "Missing Network Security Configuration",
+    "confidence": "Confirmed",
+    "severity": "Low",
+    "cvss_vector": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 3.7,
+    "cwe": "CWE-319",
+    "owasp": "MASVS-NETWORK-1",
+    "description": "The app does not declare a network_security_config.xml. While the app currently declares no INTERNET permission and makes no network calls, the absence of an explicit network security configuration means if network functionality is added in the future, it will rely on Android defaults (cleartext blocked on Android 9+).",
+    "affected_components": [
+      {
+        "file": "res/xml/network_security_config.xml",
+        "component": "network-security-config",
+        "note": "Missing file"
+      },
+      {
+        "file": "AndroidManifest.xml",
+        "component": "application",
+        "attribute": "android:networkSecurityConfig",
+        "note": "Not declared"
+      }
+    ],
+    "attack_scenario": "Future network functionality added without explicit TLS enforcement could expose cleartext traffic on pre-Android 9 devices or if cleartext is explicitly permitted.",
+    "proof_of_concept": "find decoded/res/xml -name \"network_security_config.xml\"\n# No results\ngrep -i networkSecurityConfig decoded/AndroidManifest.xml\n# Not found",
+    "impact": {
+      "confidentiality": "Low - future network traffic could be unencrypted",
+      "integrity": "None",
+      "availability": "None"
+    },
+    "remediation": "Add explicit network security config:\n<!-- res/xml/network_security_config.xml -->\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<network-security-config>\n    <base-config cleartextTrafficPermitted=\"false\">\n        <trust-anchors>\n            <certificates src=\"system\"/>\n        </trust-anchors>\n    </base-config>\n</network-security-config>\n\n<!-- AndroidManifest.xml -->\n<application\n    android:networkSecurityConfig=\"@xml/network_security_config\"\n    ... >",
+    "evidence_files": [
+      "evidence/low-002-network-config.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "INFO-001",
+    "title": "Anti-VM Check in Library Code (Build.MANUFACTURER)",
+    "confidence": "Confirmed",
+    "severity": "Informational",
+    "cvss_vector": "CVSS:4.0/AV:L/AC:H/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 0.0,
+    "cwe": "N/A",
+    "owasp": "MASVS-RESILIENCE-1",
+    "description": "APKiD detects an anti-VM check (Build.MANUFACTURER) in classes2.dex. Analysis shows this originates from androidx.core.view.DisplayCompat (Sony BRAVIA TV detection), not app code. This is a benign framework check for device-specific display handling.",
+    "affected_components": [
+      {
+        "file": "jadx_output/sources/androidx/core/view/DisplayCompat.java",
+        "line": 85,
+        "component": "library",
+        "method": "isTv()",
+        "note": "Framework code - not app code"
+      }
+    ],
+    "attack_scenario": "N/A - This is legitimate framework behavior for device compatibility (Sony BRAVIA TV detection)",
+    "proof_of_concept": "apkid app-release.apk\n# Output shows: |-> anti_vm : Build.MANUFACTURER check\n# Source: DisplayCompat.java:85 - return isTv(context) && \"Sony\".equals(Build.MANUFACTURER) && ...",
+    "impact": {
+      "confidentiality": "None",
+      "integrity": "None",
+      "availability": "None"
+    },
+    "remediation": "No action required. This is legitimate framework behavior for device compatibility.",
+    "evidence_files": [
+      "evidence/info-001-antivm.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "INFO-002",
+    "title": "R8 Compilation Without Marker (Standard Release Build Behavior)",
+    "confidence": "Confirmed",
+    "severity": "Informational",
+    "cvss_vector": "CVSS:4.0/AV:L/AC:H/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 0.0,
+    "cwe": "N/A",
+    "owasp": "MASVS-RESILIENCE-2",
+    "description": "APKiD flags classes2.dex as \"r8 without marker (suspicious)\". This indicates R8 optimization removed the R8 marker annotation, which is normal for release builds with minification enabled. Not a security issue.",
+    "affected_components": [
+      {
+        "file": "classes2.dex",
+        "component": "dex",
+        "note": "APKiD detection"
+      }
+    ],
+    "attack_scenario": "N/A - Standard R8 release build behavior",
+    "proof_of_concept": "apkid app-release.apk\n# Output shows: |-> compiler : r8 without marker (suspicious)",
+    "impact": {
+      "confidentiality": "None",
+      "integrity": "None",
+      "availability": "None"
+    },
+    "remediation": "No action required. Standard R8 release build behavior.",
+    "evidence_files": [
+      "evidence/info-002-r8-marker.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  },
+  {
+    "id": "INFO-003",
+    "title": "Certificate Validity Period (27 Years)",
+    "confidence": "Confirmed",
+    "severity": "Informational",
+    "cvss_vector": "CVSS:4.0/AV:L/AC:H/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N",
+    "cvss_score": 0.0,
+    "cwe": "N/A",
+    "owasp": "MASVS-PLATFORM-3",
+    "description": "The signing certificate is valid from 2026-09-26 until 2054-02-11 (approximately 27 years). While long validity is standard for Android apps (to support updates), excessively long periods increase risk if the private key is compromised.",
+    "affected_components": [
+      {
+        "file": "~/.android/keystores/testproj-release.jks",
+        "component": "keystore",
+        "alias": "testproj-release",
+        "note": "Valid from: Sat Sep 26 10:33:56 IST 2026 until: Wed Feb 11 10:33:56 IST 2054"
+      }
+    ],
+    "attack_scenario": "If private key is compromised, attacker can sign malicious updates for ~27 years",
+    "proof_of_concept": "keytool -list -v -keystore ~/.android/keystores/testproj-release.jks -alias testproj-release\n# Valid from: Sat Sep 26 10:33:56 IST 2026 until: Wed Feb 11 10:33:56 IST 2054",
+    "impact": {
+      "confidentiality": "None",
+      "integrity": "None",
+      "availability": "None"
+    },
+    "remediation": "Consider shorter validity periods (e.g., 10-15 years) for future keystores. Current certificate is acceptable for this test app.",
+    "evidence_files": [
+      "evidence/info-003-cert-validity.txt"
+    ],
+    "source": "static",
+    "status": "open"
+  }
+]

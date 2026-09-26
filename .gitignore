@@ -17,3 +17,10 @@ local.properties
 
 # OS
 .DS_Store
+
+# Security audits
+*.rsa
+*backup*.ab
+*/jadx_output/*
+*/decoded/*
+
